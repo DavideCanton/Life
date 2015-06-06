@@ -1,0 +1,49 @@
+#content {
+  position: relative;
+
+  table {
+    cursor: pointer;
+    margin: auto;
+    border-spacing: 0;
+    border-collapse: collapse;
+
+    td {
+      border: 1px solid;
+      transition: background .1s linear;
+
+      @for $i from 1 through 6 {
+        $val: 64 / $i;
+        &.cell-#{$i} {
+          width: #{$val}px;
+          height: #{$val}px;
+        }
+      }
+    }
+  }
+}
+
+form {
+  margin: 5px;
+}
+
+#bar {
+  position: absolute;
+  right: 0;
+  height: 100%;
+  top: 0;
+
+  ul {
+    li {
+      list-style: none;
+    }
+  }
+
+  button {
+    height: 50px;
+    margin: 0 auto 10px auto;
+  }
+}
+
+.no-block {
+  display: inline-block;
+}

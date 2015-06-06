@@ -1,0 +1,13 @@
+{
+    "name": "Life",
+    "description": "Game of Life",
+    "version": "0.0.0",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+        "angular": "^x",
+        "angular-mocks": "^x",
+        "bootstrap": "^x",
+        "jquery": "^x"
+    }
+}

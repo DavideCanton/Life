@@ -1,0 +1,47 @@
+#content {
+  position: relative; }
+  #content table {
+    cursor: pointer;
+    margin: auto;
+    border-spacing: 0;
+    border-collapse: collapse; }
+    #content table td {
+      border: 1px solid;
+      transition: background .1s linear; }
+      #content table td.cell-1 {
+        width: 64px;
+        height: 64px; }
+      #content table td.cell-2 {
+        width: 32px;
+        height: 32px; }
+      #content table td.cell-3 {
+        width: 21.33333px;
+        height: 21.33333px; }
+      #content table td.cell-4 {
+        width: 16px;
+        height: 16px; }
+      #content table td.cell-5 {
+        width: 12.8px;
+        height: 12.8px; }
+      #content table td.cell-6 {
+        width: 10.66667px;
+        height: 10.66667px; }
+
+form {
+  margin: 5px; }
+
+#bar {
+  position: absolute;
+  right: 0;
+  height: 100%;
+  top: 0; }
+  #bar ul li {
+    list-style: none; }
+  #bar button {
+    height: 50px;
+    margin: 0 auto 10px auto; }
+
+.no-block {
+  display: inline-block; }
+
+/*# sourceMappingURL=style.css.map */
