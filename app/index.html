@@ -38,7 +38,7 @@
 
         </form>
     </div>
-    <div class="col-sm-5 panel panel-info">
+    <div class="col-sm-4 panel panel-info">
         <form name="startForm">
             <div class="form-group">
                 <label>
@@ -57,17 +57,36 @@
         </form>
     </div>
 
-    <div class="col-sm-2 panel panel-info">
+    <div class="col-sm-3 panel panel-info">
         <form name="extraForm">
             <div class="form-group">
                 <label>
                     fg color
-                    <input type="color" ng-model="fgcolor" class="form-control">
+                    <input type="color" ng-model="fgcolor">
                 </label>
                 <label>
                     bg color
-                    <input type="color" ng-model="bgcolor" class="form-control">
+                    <input type="color" ng-model="bgcolor">
                 </label>
+                <label>
+                    B:
+                    <label ng-repeat="i in range(0, 9)">
+                        {{ i }}
+                        <input type="checkbox" ng-model="b[i]">
+                    </label>
+                </label>
+                <label>
+                    S:
+                    <label ng-repeat="i in range(0, 9)">
+                        {{ i }}
+                        <input type="checkbox" ng-model="s[i]">
+                    </label>
+                </label>
+
+                <div>
+                    <button ng-click="setLife()" class="btn btn-default">Life</button>
+                    <button ng-click="setHighLife()" class="btn btn-default">HighLife</button>
+                </div>
             </div>
         </form>
     </div>
@@ -76,8 +95,8 @@
     <div class="row">
         <div class="col-sm-10">
             <table>
-                <tr ng-repeat="i in range(table.getRows())">
-                    <td ng-repeat="j in range(table.getCols())"
+                <tr ng-repeat="i in range(0, table.getRows())">
+                    <td ng-repeat="j in range(0, table.getCols())"
                         clickable-cell data-on-click="applyBrush(i, j)" data-on-move="applyBrush(i, j)"
                         adjust-width invert-border>
                     </td>

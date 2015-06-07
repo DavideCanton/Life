@@ -2,6 +2,19 @@
 ///<reference path="lifetable.ts"/>
 ///<reference path="brushes.ts"/>
 var app = angular.module("lifeApp", []);
+function toIntegerArray(b) {
+    var r = [];
+    for (var i = 0; i < b.length; i++)
+        if (b[i])
+            r.push(i);
+    return r;
+}
+function fromIntegerArray(n) {
+    var r = [false, false, false, false, false, false, false, false];
+    for (var i = 0; i < n.length; i++)
+        r[n[i]] = true;
+    return r;
+}
 var LifeController = (function () {
     function LifeController($scope, $timeout) {
         this.$scope = $scope;
@@ -30,7 +43,9 @@ var LifeController = (function () {
             $scope.generation = 0;
             $scope.stop();
             var tableClass = $scope.toroidal ? LifeTable.LifeTableToroidal : LifeTable.LifeTable;
-            $scope.table = new tableClass($scope.r, $scope.c);
+            var b = toIntegerArray($scope.b);
+            var s = toIntegerArray($scope.s);
+            $scope.table = new tableClass($scope.r, $scope.c, b, s);
         };
         $scope.generate_random = function () {
             $scope.generate();
@@ -39,11 +54,11 @@ var LifeController = (function () {
                     if (Math.random() <= 0.5)
                         $scope.table.setElementAt(i, j, true);
         };
-        $scope.range = function (n) {
-            var a = [];
-            for (var i = 0; i < n; i++)
-                a.push(i);
-            return a;
+        $scope.range = function (a, b) {
+            var r = [];
+            for (var i = a; i < b; i++)
+                r.push(i);
+            return r;
         };
         $scope.start = function () {
             $scope.stop();
@@ -100,6 +115,15 @@ var LifeController = (function () {
         $scope.select = function (data) {
             $scope.current_brush = data.brush;
         };
+        $scope.setLife = function () {
+            $scope.b = fromIntegerArray([3]);
+            $scope.s = fromIntegerArray([2, 3]);
+        };
+        $scope.setHighLife = function () {
+            $scope.b = fromIntegerArray([3, 6]);
+            $scope.s = fromIntegerArray([2, 3]);
+        };
+        $scope.setLife();
         $scope.generate();
     }
     LifeController.$inject = ['$scope', '$timeout'];

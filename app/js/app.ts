@@ -10,6 +10,8 @@ interface MyScope extends ng.IScope
     current_brush : Brushes.Brush;
     r : number;
     c : number;
+    b : boolean[];
+    s : boolean[];
     generation : number;
     isRunning : boolean;
     toroidal : boolean;
@@ -24,10 +26,29 @@ interface MyScope extends ng.IScope
     step() : void;
     generate() : void;
     generate_random() : void;
-    range(n : number) : number[];
+    range(a : number, b : number) : number[];
     applyBrush(i : number, j : number) : void;
     select(brushdata : Brushes.BrushData) : void;
     handleKeyPress($event : any) : void;
+    setLife() : void;
+    setHighLife() : void;
+}
+
+function toIntegerArray(b : boolean[]) : number[]
+{
+    var r = [];
+    for (var i = 0; i < b.length; i++)
+        if (b[i])
+            r.push(i);
+    return r;
+}
+
+function fromIntegerArray(n : number[]) : boolean[]
+{
+    var r = [false, false, false, false, false, false, false, false];
+    for (var i = 0; i < n.length; i++)
+        r[n[i]] = true;
+    return r;
 }
 
 class LifeController
@@ -68,7 +89,10 @@ class LifeController
             $scope.generation = 0;
             $scope.stop();
             var tableClass : typeof LifeTable.LifeTable = $scope.toroidal ? LifeTable.LifeTableToroidal : LifeTable.LifeTable;
-            $scope.table = new tableClass($scope.r, $scope.c);
+            var b = toIntegerArray($scope.b);
+            var s = toIntegerArray($scope.s);
+
+            $scope.table = new tableClass($scope.r, $scope.c, b, s);
         };
 
         $scope.generate_random = () =>
@@ -80,12 +104,12 @@ class LifeController
                         $scope.table.setElementAt(i, j, true);
         };
 
-        $scope.range = (n : number) : number[] =>
+        $scope.range = (a : number, b : number) : number[] =>
         {
-            var a : number[] = [];
-            for (var i = 0; i < n; i++)
-                a.push(i);
-            return a;
+            var r : number[] = [];
+            for (var i = a; i < b; i++)
+                r.push(i);
+            return r;
         };
 
         $scope.start = () =>
@@ -160,6 +184,19 @@ class LifeController
             $scope.current_brush = data.brush;
         };
 
+        $scope.setLife = () =>
+        {
+            $scope.b = fromIntegerArray([3]);
+            $scope.s = fromIntegerArray([2, 3]);
+        };
+
+        $scope.setHighLife = () =>
+        {
+            $scope.b = fromIntegerArray([3, 6]);
+            $scope.s = fromIntegerArray([2, 3]);
+        };
+
+        $scope.setLife();
         $scope.generate();
     }
 }

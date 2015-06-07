@@ -17,9 +17,11 @@ var LifeTable;
         return table;
     }
     var LifeTable = (function () {
-        function LifeTable(r, c) {
+        function LifeTable(r, c, b, s) {
             this.r = r;
             this.c = c;
+            this.b = b;
+            this.s = s;
             this.table = newTable(r, c);
         }
         LifeTable.prototype.getElementAt = function (i, j) {
@@ -60,16 +62,17 @@ var LifeTable;
             return n;
         };
         LifeTable.prototype.alive = function (i, j, n) {
-            var val = this.table[i][j];
-            return n == 3 || (n == 2 && val);
+            if (this.table[i][j])
+                return this.s.indexOf(n) >= 0;
+            return this.b.indexOf(n) >= 0;
         };
         return LifeTable;
     })();
     _LifeTable.LifeTable = LifeTable;
     var LifeTableToroidal = (function (_super) {
         __extends(LifeTableToroidal, _super);
-        function LifeTableToroidal(r, c) {
-            _super.call(this, r, c);
+        function LifeTableToroidal(r, c, b, s) {
+            _super.call(this, r, c, b, s);
         }
         LifeTableToroidal.prototype.computeNeighbors = function (r, c) {
             var rows = this.getRows(), cols = this.getCols();

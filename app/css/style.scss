@@ -47,3 +47,9 @@ form {
 .no-block {
   display: inline-block;
 }
+
+form[name=extraForm] {
+  input[type=checkbox] {
+    margin-right: 5px;
+  }
+}

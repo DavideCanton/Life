@@ -17,7 +17,7 @@ module LifeTable
     {
         private table : boolean[][];
 
-        constructor(private r : number, private c : number)
+        constructor(private r : number, private c : number, private b : number[], private s : number[])
         {
             this.table = newTable(r, c);
         }
@@ -76,16 +76,17 @@ module LifeTable
 
         private alive(i : number, j : number, n : number) : boolean
         {
-            var val = this.table[i][j];
-            return n == 3 || (n == 2 && val);
+            if (this.table[i][j])
+                return this.s.indexOf(n) >= 0;
+            return this.b.indexOf(n) >= 0;
         }
     }
 
     export class LifeTableToroidal extends LifeTable
     {
-        constructor(r : number, c : number)
+        constructor(r : number, c : number, b : number[], s : number[])
         {
-            super(r, c);
+            super(r, c, b, s);
         }
 
         protected computeNeighbors(r : number, c : number) : number

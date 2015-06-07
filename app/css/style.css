@@ -44,4 +44,7 @@ form {
 .no-block {
   display: inline-block; }
 
+form[name=extraForm] input[type=checkbox] {
+  margin-right: 5px; }
+
 /*# sourceMappingURL=style.css.map */
