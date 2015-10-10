@@ -41,8 +41,19 @@ module Brushes
 
     class PencilBrush implements Brush
     {
-        constructor(private width : number)
+        constructor(public width : number, public value : boolean = true)
         {
+        }
+
+        incr() : void
+        {
+            this.width++;
+        }
+
+        decr() : void
+        {
+            if (this.width > 1)
+                this.width--;
         }
 
         rows() : number
@@ -59,31 +70,15 @@ module Brushes
         {
             for (var i = r; i < r + this.width; i++)
                 for (var j = c; j < c + this.width; j++)
-                    table.setElementAt(i, j, true);
+                    table.setElementAt(i, j, this.value);
         }
     }
 
-    class RubberBrush implements Brush
+    class RubberBrush extends PencilBrush
     {
-        constructor(private width : number)
+        constructor(public width : number = 1)
         {
-        }
-
-        rows() : number
-        {
-            return this.width;
-        }
-
-        cols() : number
-        {
-            return this.width;
-        }
-
-        applyTo(r : number, c : number, table : LifeTable.LifeTable)
-        {
-            for (var i = r; i < r + this.width; i++)
-                for (var j = c; j < c + this.width; j++)
-                    table.setElementAt(i, j, false);
+            super(width, false);
         }
     }
 
@@ -92,6 +87,21 @@ module Brushes
         constructor()
         {
             super(2);
+        }
+    }
+
+    class ReverserBrush extends PencilBrush
+    {
+        constructor()
+        {
+            super(2);
+        }
+
+        applyTo(r : number, c : number, table : LifeTable.LifeTable)
+        {
+            for (var i = r; i < r + this.width; i++)
+                for (var j = c; j < c + this.width; j++)
+                    table.setElementAt(i, j, !table.getElementAt(i, j));
         }
     }
 
@@ -104,15 +114,75 @@ module Brushes
         }
     }
 
+    class NoneBrush implements Brush
+    {
+        rows() : number
+        {
+            return 0;
+        }
+
+        cols() : number
+        {
+            return 0;
+        }
+
+        applyTo(i : number, j : number, table : LifeTable.LifeTable)
+        {
+        }
+    }
+
     export interface BrushData
     {
-        name : string;
-        brush : Brushes.Brush
+        brush : Brushes.Brush;
+        numconfig?: boolean;
+        name: () => string;
     }
 
     export var BRUSHES : BrushData[] = [
-        {name: 'pencil', brush: new PencilBrush(1)},
-        {name: 'rubber', brush: new RubberBrush(1)},
-        {name: 'block', brush: new BlockBrush()},
-        {name: 'glider', brush: new GliderBrush()}];
+        {
+            name: () => 'None',
+            brush: new NoneBrush()
+        },
+
+        {
+            brush: new BlockBrush(),
+            numconfig: true,
+            name: function ()
+            {
+                if (this.brush.width === 1)
+                    return "Pencil";
+                else
+                    return "Block " + this.brush.width + "x" + this.brush.width;
+            }
+        },
+
+        {
+            brush: new RubberBrush(1),
+            numconfig: true,
+            name: function ()
+            {
+                if (this.brush.width !== 1)
+                    return "Rubber " + this.brush.width + "x" + this.brush.width;
+                else
+                    return "Rubber";
+            }
+        },
+
+        {
+            brush: new ReverserBrush(),
+            numconfig: true,
+            name: function ()
+            {
+                if (this.brush.width === 1)
+                    return "Reverser";
+                else
+                    return "Reverser " + this.brush.width + "x" + this.brush.width;
+            }
+        },
+
+        {
+            name: () => 'Glider',
+            brush: new GliderBrush()
+        }
+    ];
 }

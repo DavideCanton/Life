@@ -1,0 +1,6 @@
+doctype html
+div.sidebar-links
+	div(ng-repeat="bar in bars")
+		button.btn-primary.btn.btn-block(ng-click="select(bar)") {{ bar.title }}
+
+div(ng-transclude)

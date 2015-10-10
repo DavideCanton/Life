@@ -25,11 +25,12 @@ var LifeTable;
             this.table = newTable(r, c);
         }
         LifeTable.prototype.getElementAt = function (i, j) {
-            return this.table[i][j];
+            return this.table[i] ? this.table[i][j] : false;
         };
         LifeTable.prototype.setElementAt = function (i, j, val) {
             var old = this.getElementAt(i, j);
-            this.table[i][j] = val;
+            if (this.table[i])
+                this.table[i][j] = val;
             return old;
         };
         LifeTable.prototype.getRows = function () {

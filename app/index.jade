@@ -1,0 +1,87 @@
+doctype html
+html(lang="en", ng-app="lifeApp")
+	head(lang="en")
+		meta(charset="UTF-8")
+		title Life
+		script(src="bower_components/jquery/dist/jquery.js")
+		script(src="bower_components/angular/angular.js")
+		script(src="bower_components/angular-animate/angular-animate.min.js")
+		script(src="bower_components/bootstrap/dist/js/bootstrap.js")
+		script(src="js/lifetable.js")
+		script(src="js/brushes.js")
+		script(src="js/app.js")
+		link(href="bower_components/bootstrap/dist/css/bootstrap.css", rel="stylesheet")
+		link(href="css/style.css", rel="stylesheet")
+
+	body(ng-controller="lifeController" ng-keypress="handleKeyPress($event)")
+
+		sidebars
+			sidebar(title="Grid controls")
+				form.form-horizontal(name="dataForm", novalidate)
+					label(for="r") Rows:
+					input#r.form-control.margin-bottom(type="number", ng-model="r", min="1")
+
+					label(for="c") Cols:
+					input#c.form-control.margin-bottom(type="number", ng-model="c", min="1")
+
+					div
+						button.btn.btn-primary(ng-disabled="isRunning", ng-class="{active: toroidal}", ng-click="toggleToroidal()") Toroidal
+
+						<!-- TODO non funzionano più -->
+						.btn-group
+							button.btn.btn-primary(ng-click="generate()").
+								Create Empty
+							button.btn.btn-warning(ng-click="generate_random()").
+								Create Random
+
+				form(name="startForm")
+					label Delay:
+						input.form-control(type="number", ng-model="delay", min="0", step="10")
+
+					div
+						.btn-group
+							button.btn.btn-success(ng-click="start()", ng-disabled!="isRunning")
+								| Start
+							button.btn.btn-danger(ng-click="stop()", ng-disabled!="!isRunning")
+								| Stop
+							button.btn.btn-warning(ng-click="step()")
+								| Step
+
+					h3
+						span.label.label-info
+							| Generation: {{ generation }}
+
+				form.form-inline(name="extraForm")
+					div
+						label(for="fgcolor") fg color
+						input#fgcolor.form-control.color-form-control(type="color", ng-model="fgcolor")
+
+					div
+						label(for="bgcolor") bg color
+						input#bgcolor.form-control.color-form-control(type="color", ng-model="bgcolor")
+
+					div
+						label.my-checkbox-label B:
+						mycheckbox(ng-repeat="i in range(0, 9)", data-model="b[i]", data-content="i")
+
+					div
+						label.my-checkbox-label S:
+						mycheckbox(ng-repeat="i in range(0, 9)", data-model="s[i]", data-content="i")
+
+					div
+						button.btn.btn-default(ng-click="setLife()") Life
+						button.btn.btn-default(ng-click="setHighLife()") Highlife
+
+
+			sidebar#btn-bar(title="Brushes")
+				brush-button(ng-repeat="brush in brushes",
+					data-brush="brush",
+					data-outer-current-brush="current_brush"
+					data-onclick="select(brush)")
+
+		#content
+			table#main-table
+				tr(ng-repeat!="i in range(0, table.getRows())")
+					td(ng-repeat!="j in range(0, table.getCols())",
+					clickable-cell, adjust-width, hover-brush
+					onselectstart="return false", ondragstart="return false")

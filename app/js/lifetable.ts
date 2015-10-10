@@ -24,13 +24,14 @@ module LifeTable
 
         getElementAt(i : number, j : number) : boolean
         {
-            return this.table[i][j];
+            return this.table[i] ? this.table[i][j] : false;
         }
 
         setElementAt(i : number, j : number, val : boolean) : boolean
         {
             var old : boolean = this.getElementAt(i, j);
-            this.table[i][j] = val;
+            if(this.table[i])
+                this.table[i][j] = val;
             return old;
         }
 

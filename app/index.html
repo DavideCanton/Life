@@ -1,117 +1,83 @@
 <!DOCTYPE html>
-<html ng-app="lifeApp">
-<head lang="en">
+<html lang="en" ng-app="lifeApp">
+  <head lang="en">
     <meta charset="UTF-8">
     <title>Life</title>
-    <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.min.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="js/lifetable.js"></script>
     <script src="js/brushes.js"></script>
     <script src="js/app.js"></script>
     <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-</head>
-<body ng-controller="lifeController" ng-keypress="handleKeyPress($event)">
-<div id="forms" class="row">
-    <div class="col-sm-5 panel panel-info">
-        <form name="dataForm" novalidate>
-            <div class="form-group">
-                <label>
-                    Rows:
-                    <input type="number" ng-model="r" min="1" class="form-control">
-                </label>
-                <label>
-                    Cols:
-                    <input type="number" ng-model="c" min="1" class="form-control">
-                </label>
-                <label>
-                    Toroidal:
-                    <input type="checkbox" ng-model="toroidal" ng-disabled="isRunning">
-                </label>
-
-                <div class="btn-group">
-                    <button ng-click="generate()" class="btn btn-primary">{{ !!table ? "Reset" : "Generate" }}</button>
-                    <button ng-click="generate_random()" class="btn btn-warning">Random</button>
-                </div>
+  </head>
+  <body ng-controller="lifeController" ng-keypress="handleKeyPress($event)">
+    <sidebars>
+      <sidebar title="Grid controls">
+        <form name="dataForm" novalidate class="form-horizontal">
+          <label for="r">Rows:</label>
+          <input id="r" type="number" ng-model="r" min="1" class="form-control margin-bottom">
+          <label for="c">Cols:</label>
+          <input id="c" type="number" ng-model="c" min="1" class="form-control margin-bottom">
+          <div>
+            <button ng-disabled="isRunning" ng-class="{active: toroidal}" ng-click="toggleToroidal()" class="btn btn-primary">Toroidal</button><!-- TODO non funzionano pi� -->
+            <div class="btn-group">
+              <button ng-click="generate()" class="btn btn-primary">Create Empty</button>
+              <button ng-click="generate_random()" class="btn btn-warning">
+                Create Random
+                
+              </button>
             </div>
-
+          </div>
         </form>
-    </div>
-    <div class="col-sm-4 panel panel-info">
         <form name="startForm">
-            <div class="form-group">
-                <label>
-                    Delay:
-                    <input type="number" ng-model="delay" min="0" step="10" class="form-control">
-                </label>
-
-                <div class="btn-group">
-                    <button ng-click="start()" ng-disabled="isRunning" class="btn btn-success">Start</button>
-                    <button ng-click="stop()" ng-disabled="!isRunning" class="btn btn-danger">Stop</button>
-                    <button ng-click="step()" class="btn btn-warning">Step</button>
-                </div>
-
-                <h3 class="no-block"><span class="label label-info">Generation: {{ generation }}</span></h3>
+          <label>Delay:
+            <input type="number" ng-model="delay" min="0" step="10" class="form-control">
+          </label>
+          <div>
+            <div class="btn-group">
+              <button ng-click="start()" ng-disabled="isRunning" class="btn btn-success">Start</button>
+              <button ng-click="stop()" ng-disabled="!isRunning" class="btn btn-danger">Stop</button>
+              <button ng-click="step()" class="btn btn-warning">Step</button>
             </div>
+          </div>
+          <h3><span class="label label-info">Generation: {{ generation }}</span></h3>
         </form>
-    </div>
-
-    <div class="col-sm-3 panel panel-info">
-        <form name="extraForm">
-            <div class="form-group">
-                <label>
-                    fg color
-                    <input type="color" ng-model="fgcolor">
-                </label>
-                <label>
-                    bg color
-                    <input type="color" ng-model="bgcolor">
-                </label>
-                <label>
-                    B:
-                    <label ng-repeat="i in range(0, 9)">
-                        {{ i }}
-                        <input type="checkbox" ng-model="b[i]">
-                    </label>
-                </label>
-                <label>
-                    S:
-                    <label ng-repeat="i in range(0, 9)">
-                        {{ i }}
-                        <input type="checkbox" ng-model="s[i]">
-                    </label>
-                </label>
-
-                <div>
-                    <button ng-click="setLife()" class="btn btn-default">Life</button>
-                    <button ng-click="setHighLife()" class="btn btn-default">HighLife</button>
-                </div>
-            </div>
+        <form name="extraForm" class="form-inline">
+          <div>
+            <label for="fgcolor">fg color</label>
+            <input id="fgcolor" type="color" ng-model="fgcolor" class="form-control color-form-control">
+          </div>
+          <div>
+            <label for="bgcolor">bg color</label>
+            <input id="bgcolor" type="color" ng-model="bgcolor" class="form-control color-form-control">
+          </div>
+          <div>
+            <label class="my-checkbox-label">B:</label>
+            <mycheckbox ng-repeat="i in range(0, 9)" data-model="b[i]" data-content="i"></mycheckbox>
+          </div>
+          <div>
+            <label class="my-checkbox-label">S:</label>
+            <mycheckbox ng-repeat="i in range(0, 9)" data-model="s[i]" data-content="i"></mycheckbox>
+          </div>
+          <div>
+            <button ng-click="setLife()" class="btn btn-default">Life</button>
+            <button ng-click="setHighLife()" class="btn btn-default">Highlife</button>
+          </div>
         </form>
+      </sidebar>
+      <sidebar id="btn-bar" title="Brushes">
+        <brush-button ng-repeat="brush in brushes" data-brush="brush" data-outer-current-brush="current_brush" data-onclick="select(brush)"></brush-button>
+      </sidebar>
+    </sidebars>
+    <div id="content">
+      <table id="main-table">
+        <tr ng-repeat="i in range(0, table.getRows())">
+          <td ng-repeat="j in range(0, table.getCols())" clickable-cell adjust-width hover-brush onselectstart="return false" ondragstart="return false"></td>
+        </tr>
+      </table>
     </div>
-</div>
-<div id="content" class="container-fluid">
-    <div class="row">
-        <div class="col-sm-10">
-            <table>
-                <tr ng-repeat="i in range(0, table.getRows())">
-                    <td ng-repeat="j in range(0, table.getCols())"
-                        clickable-cell data-on-click="applyBrush(i, j)" data-on-move="applyBrush(i, j)"
-                        adjust-width invert-border>
-                    </td>
-                </tr>
-            </table>
-        </div>
-
-        <div id="bar" class="col-sm-2">
-            <button ng-repeat="brush in brushes"
-                    ng-click="select(brush)" class="btn btn-primary btn-block"
-                    ng-class="{'btn-danger': brush.brush === current_brush}">
-                {{ brush.name }}
-            </button>
-        </div>
-    </div>
-</div>
-</body>
+  </body>
 </html>

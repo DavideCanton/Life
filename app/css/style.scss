@@ -1,55 +1,154 @@
-#content {
-  position: relative;
+$big-button: 50;
+$small-button: $big-button * 0.4;
 
-  table {
-    cursor: pointer;
-    margin: auto;
-    border-spacing: 0;
-    border-collapse: collapse;
+#content
+{
+    position: relative;
+    margin-top: 50px;
 
-    td {
-      border: 1px solid;
-      transition: background .1s linear;
+    table
+    {
+        cursor: pointer;
+        margin: auto;
+        border-spacing: 1px;
+        border-collapse: separate;
 
-      @for $i from 1 through 6 {
-        $val: 64 / $i;
-        &.cell-#{$i} {
-          width: #{$val}px;
-          height: #{$val}px;
+        td
+        {
+            border: 1px solid black;
+            transition: background .1s linear;
+
+            @each $pos in top, bottom, left, right
+            {
+                &.#{$pos}-hover
+                {
+                    border-#{$pos}: 5px solid red;
+                }
+            }
         }
-      }
     }
-  }
 }
 
-form {
-  margin: 5px;
+.margin-bottom
+{
+    margin-bottom: 10px;
 }
 
-#bar {
-  position: absolute;
-  right: 0;
-  height: 100%;
-  top: 0;
-
-  ul {
-    li {
-      list-style: none;
+#btn-bar
+{
+    ul
+    {
+        li
+        {
+            list-style: none;
+        }
     }
-  }
 
-  button {
-    height: 50px;
-    margin: 0 auto 10px auto;
-  }
+    & .brush-btn-container
+    {
+        position: relative;
+        margin: 0 auto 10px auto;
+    }
+
+    & .brush-btn-container button
+    {
+        height: #{$big-button}px;
+        z-index: 3;
+    }
+
+    & .brush-btn-container button.top-right-button
+    {
+        position: absolute;
+        z-index: 4;
+        top: 0;
+        right: 0;
+        height: #{$small-button}px;
+        margin: 0;
+        line-height: #{$small-button}px;
+        padding: 0;
+        width: #{$small-button}px;
+    }
+
+    & .brush-btn-container button.bottom-right-button
+    {
+        position: absolute;
+        z-index: 4;
+        bottom: 0;
+        right: 0;
+        height: #{$small-button}px;
+        margin: 0;
+        line-height: #{$small-button}px;
+        padding: 0;
+        width: #{$small-button}px;
+    }
+
+    button
+    {
+        z-index: 1;
+    }
 }
 
-.no-block {
-  display: inline-block;
+.my-checkbox-label
+{
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    display: inline-block;
+    line-height: 40px;
 }
 
-form[name=extraForm] {
-  input[type=checkbox] {
-    margin-right: 5px;
-  }
+.no-rounded-border
+{
+    border-radius: 0;
+}
+
+.color-form-control
+{
+    min-width: 80px !important;
+}
+
+.sidebar-content
+{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 30%;
+    background: lightblue;
+    padding: 20px;
+    z-index: 2;
+
+    .closebtn
+    {
+        margin-bottom: 20px;
+        background: #ff6666;
+        width: 30px;
+        height: 30px;
+        border: none;
+    }
+
+    form
+    {
+        margin-bottom: 20px;
+
+        & > div
+        {
+            margin-bottom: 10px;
+        }
+    }
+}
+
+.sidebar-links {
+    padding: 20px;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 15%;
+    z-index: 1;
+
+    button {
+        height: #{$big-button}px;
+        margin-bottom: 20px;
+    }
 }

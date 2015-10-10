@@ -28,9 +28,18 @@ var Brushes;
         return PatternBrush;
     })();
     var PencilBrush = (function () {
-        function PencilBrush(width) {
+        function PencilBrush(width, value) {
+            if (value === void 0) { value = true; }
             this.width = width;
+            this.value = value;
         }
+        PencilBrush.prototype.incr = function () {
+            this.width++;
+        };
+        PencilBrush.prototype.decr = function () {
+            if (this.width > 1)
+                this.width--;
+        };
         PencilBrush.prototype.rows = function () {
             return this.width;
         };
@@ -40,33 +49,37 @@ var Brushes;
         PencilBrush.prototype.applyTo = function (r, c, table) {
             for (var i = r; i < r + this.width; i++)
                 for (var j = c; j < c + this.width; j++)
-                    table.setElementAt(i, j, true);
+                    table.setElementAt(i, j, this.value);
         };
         return PencilBrush;
     })();
-    var RubberBrush = (function () {
+    var RubberBrush = (function (_super) {
+        __extends(RubberBrush, _super);
         function RubberBrush(width) {
+            if (width === void 0) { width = 1; }
+            _super.call(this, width, false);
             this.width = width;
         }
-        RubberBrush.prototype.rows = function () {
-            return this.width;
-        };
-        RubberBrush.prototype.cols = function () {
-            return this.width;
-        };
-        RubberBrush.prototype.applyTo = function (r, c, table) {
-            for (var i = r; i < r + this.width; i++)
-                for (var j = c; j < c + this.width; j++)
-                    table.setElementAt(i, j, false);
-        };
         return RubberBrush;
-    })();
+    })(PencilBrush);
     var BlockBrush = (function (_super) {
         __extends(BlockBrush, _super);
         function BlockBrush() {
             _super.call(this, 2);
         }
         return BlockBrush;
+    })(PencilBrush);
+    var ReverserBrush = (function (_super) {
+        __extends(ReverserBrush, _super);
+        function ReverserBrush() {
+            _super.call(this, 2);
+        }
+        ReverserBrush.prototype.applyTo = function (r, c, table) {
+            for (var i = r; i < r + this.width; i++)
+                for (var j = c; j < c + this.width; j++)
+                    table.setElementAt(i, j, !table.getElementAt(i, j));
+        };
+        return ReverserBrush;
     })(PencilBrush);
     var GliderBrush = (function (_super) {
         __extends(GliderBrush, _super);
@@ -76,11 +89,58 @@ var Brushes;
         }
         return GliderBrush;
     })(PatternBrush);
+    var NoneBrush = (function () {
+        function NoneBrush() {
+        }
+        NoneBrush.prototype.rows = function () {
+            return 0;
+        };
+        NoneBrush.prototype.cols = function () {
+            return 0;
+        };
+        NoneBrush.prototype.applyTo = function (i, j, table) {
+        };
+        return NoneBrush;
+    })();
     Brushes.BRUSHES = [
-        { name: 'pencil', brush: new PencilBrush(1) },
-        { name: 'rubber', brush: new RubberBrush(1) },
-        { name: 'block', brush: new BlockBrush() },
-        { name: 'glider', brush: new GliderBrush() }
+        {
+            name: function () { return 'None'; },
+            brush: new NoneBrush()
+        },
+        {
+            brush: new BlockBrush(),
+            numconfig: true,
+            name: function () {
+                if (this.brush.width === 1)
+                    return "Pencil";
+                else
+                    return "Block " + this.brush.width + "x" + this.brush.width;
+            }
+        },
+        {
+            brush: new RubberBrush(1),
+            numconfig: true,
+            name: function () {
+                if (this.brush.width !== 1)
+                    return "Rubber " + this.brush.width + "x" + this.brush.width;
+                else
+                    return "Rubber";
+            }
+        },
+        {
+            brush: new ReverserBrush(),
+            numconfig: true,
+            name: function () {
+                if (this.brush.width === 1)
+                    return "Reverser";
+                else
+                    return "Reverser " + this.brush.width + "x" + this.brush.width;
+            }
+        },
+        {
+            name: function () { return 'Glider'; },
+            brush: new GliderBrush()
+        }
     ];
 })(Brushes || (Brushes = {}));
 //# sourceMappingURL=brushes.js.map

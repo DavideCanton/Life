@@ -2,7 +2,7 @@
 ///<reference path="lifetable.ts"/>
 ///<reference path="brushes.ts"/>
 
-var app : ng.IModule = angular.module("lifeApp", []);
+var app : ng.IModule = angular.module("lifeApp", ['ngAnimate']);
 
 interface MyScope extends ng.IScope
 {
@@ -26,6 +26,7 @@ interface MyScope extends ng.IScope
     step() : void;
     generate() : void;
     generate_random() : void;
+    toggleToroidal() : void;
     range(a : number, b : number) : number[];
     applyBrush(i : number, j : number) : void;
     select(brushdata : Brushes.BrushData) : void;
@@ -88,11 +89,13 @@ class LifeController
         {
             $scope.generation = 0;
             $scope.stop();
-            var tableClass : typeof LifeTable.LifeTable = $scope.toroidal ? LifeTable.LifeTableToroidal : LifeTable.LifeTable;
             var b = toIntegerArray($scope.b);
             var s = toIntegerArray($scope.s);
 
-            $scope.table = new tableClass($scope.r, $scope.c, b, s);
+            if ($scope.toroidal)
+                $scope.table = new LifeTable.LifeTableToroidal($scope.r, $scope.c, b, s);
+            else
+                $scope.table = new LifeTable.LifeTable($scope.r, $scope.c, b, s);
         };
 
         $scope.generate_random = () =>
@@ -129,9 +132,13 @@ class LifeController
         $scope.applyBrush = (i : number, j : number) : void =>
         {
             if ($scope.current_brush)
-            {
                 $scope.current_brush.applyTo(i, j, $scope.table);
-            }
+        };
+
+
+        $scope.toggleToroidal = () =>
+        {
+            $scope.toroidal = !$scope.toroidal;
         };
 
         $scope.step = () =>
@@ -203,48 +210,129 @@ class LifeController
 
 app.controller('lifeController', LifeController);
 
-app.directive("adjustWidth", ()=>
+app.directive("adjustWidth", () =>
 {
     return <ng.IDirective> {
         restrict: 'A',
-        link: (scope : MyScope, element : ng.IAugmentedJQuery, attrs) =>
+        link: (scope : MyScope, element : ng.IAugmentedJQuery) =>
         {
-            scope.$watch(() => scope.table.getRows(), (val) =>
+            scope.$watch(() => scope.table.getCols(), colNum =>
             {
-                for (var i = 1; i <= 6; i++)
-                    element.removeClass("cell-" + i);
-                var value = Math.ceil(+val / 30);
-                element.addClass("cell-" + Math.min(value, 6));
+                var width = $(element).closest("table").parent().width();
+                var cellSize = Math.min(width / colNum, 50) >> 0;
+
+                element.css(
+                    {
+                        width: cellSize + "px",
+                        height: cellSize + "px"
+                    });
             });
         }
     };
 });
 
-app.directive("clickableCell", ['$parse', ($parse : ng.IParseService)=>
+app.directive("hoverBrush", () =>
 {
     return {
         restrict: 'A',
-        scope: false,
-        link: (scope : any, element : ng.IAugmentedJQuery, attrs) =>
+        link: (scope : any, element : ng.IAugmentedJQuery) =>
         {
-            var compiledOnClick = $parse(attrs.onClick);
-            var compiledOnMove = $parse(attrs.onMove);
+            var main_table = $("#main-table");
+            var last_i = -1, last_j = -1;
 
-            element.bind('click', () =>
+            function onmouseover()
             {
-                scope.$apply(() => compiledOnClick(scope, {}));
-            }).bind('mousemove', (event) =>
+                var s_i : number = scope.i;
+                var s_j : number = scope.j;
+                last_i = s_i;
+                last_j = s_j;
+                var cur_brush : Brushes.Brush = scope.current_brush;
+                var r = cur_brush.rows();
+                var c = cur_brush.cols();
+
+                for (var i = s_i; i < s_i + r; i++)
+                    for (var j = s_j; j < s_j + c; j++)
+                    {
+                        var row = main_table.find("tr").eq(i);
+                        if (row.length == 0) continue;
+                        var cell = row.find("td").eq(j);
+                        if (cell.length == 0) continue;
+
+                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
+                        if (i == s_i) cell.addClass("top-hover");
+                        if (i == s_i + r - 1) cell.addClass("bottom-hover");
+                        if (j == s_j) cell.addClass("left-hover");
+                        if (j == s_j + c - 1) cell.addClass("right-hover");
+                    }
+            }
+
+            function onmouseout()
+            {
+                var s_i = last_i;
+                var s_j = last_j;
+                var cur_brush : Brushes.Brush = scope.current_brush;
+                var r = cur_brush.rows();
+                var c = cur_brush.cols();
+
+                for (var i = s_i; i < s_i + r; i++)
+                    for (var j = s_j; j < s_j + c; j++)
+                    {
+                        var row = main_table.find("tr").eq(i);
+                        if (row.length == 0) continue;
+                        var cell = row.find("td").eq(j);
+                        if (cell.length == 0) continue;
+
+                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
+                    }
+            }
+
+
+            element.bind('mouseover', onmouseover);
+            element.bind('mouseout', onmouseout);
+        }
+    }
+});
+
+app.directive("clickableCell", ()=>
+{
+    return {
+        restrict: 'A',
+        link: (scope : any, element : ng.IAugmentedJQuery) =>
+        {
+            var table = $("#main-table");
+
+            scope.$on("$destroy", () =>
+            {
+                mouseup();
+            });
+
+            function mouseover(event : JQueryMouseEventObject)
             {
                 if (event.which == 1)
-                    scope.$apply(() => compiledOnMove(scope, {}));
+                {
+                    // get the scope of the hovered element, it has i and j
+                    // thanks to prototypal inheritance
+                    var elScope : any = angular.element(this).scope();
+                    scope.$apply(() => scope.applyBrush(elScope.i, elScope.j));
+                }
+            }
+
+            function mouseup()
+            {
+                table.off('mouseover', 'td', mouseover);
+                table.off('mouseup', 'td', mouseup);
+            }
+
+            element.bind('mousedown', () =>
+            {
+                scope.$apply(() => scope.applyBrush(scope.i, scope.j));
+                table.on('mouseover', 'td', mouseover);
+                table.on('mouseup', 'td', mouseup);
             });
 
             scope.$watch(() => scope.table.getElementAt(scope.i, scope.j), val =>
             {
-                if (val)
-                    element.css('background-color', scope.fgcolor);
-                else
-                    element.css('background-color', scope.bgcolor);
+                element.css('background-color', val ? scope.fgcolor : scope.bgcolor);
             });
 
             scope.$watch("fgcolor", val =>
@@ -260,35 +348,127 @@ app.directive("clickableCell", ['$parse', ($parse : ng.IParseService)=>
             });
         }
     };
-}]);
+});
 
-function invert(color)
-{
-    function toHex(v)
-    {
-        var s = v.toString(16);
-        if (s.length == 1)
-            s = '0' + s;
-        return s;
-    }
-
-    var r = 255 - parseInt(color.substring(1, 3), 16);
-    var g = 255 - parseInt(color.substring(3, 5), 16);
-    var b = 255 - parseInt(color.substring(5, 7), 16);
-    return '#' + toHex(r) + toHex(g) + toHex(b);
-}
-
-app.directive("invertBorder", () =>
+app.directive("mycheckbox", () =>
 {
     return <ng.IDirective> {
-        restrict: 'A',
-        scope: false,
-        link: (scope : any, element : ng.IAugmentedJQuery, attrs) =>
+        restrict: 'E',
+        scope: {
+            model: "=",
+            content: "="
+        },
+        link: (scope : any, element : ng.IAugmentedJQuery) =>
         {
-            scope.$watch("bgcolor", val =>
+            scope.$watch("content", value =>
             {
-                element.css("border-color", invert(val));
+                element.find("button").text(value);
             });
+
+            scope.$watch("model", value =>
+            {
+                var add : string = value ? "success" : "danger";
+                var rem : string = add === "success" ? "danger" : "success";
+                element.find("button").addClass("btn-" + add).removeClass("btn-" + rem);
+            });
+
+            element.bind('click', () =>
+            {
+                scope.$apply(() => scope.model = !scope.model)
+            });
+        },
+        template: "<button class='btn no-rounded-border'></button>"
+    };
+});
+
+app.directive("brushButton", () =>
+{
+    return {
+        restrict: 'E',
+        scope: {
+            brush: "=",
+            outerCurrentBrush: "=",
+            onclick: "&"
+        },
+        template: '<div class="brush-btn-container"><button class="brush-btn btn btn-primary btn-block"> {{ brush.name() }}</button></div>',
+        link: (scope : any, element : ng.IAugmentedJQuery) =>
+        {
+            var templateRoot = element.find("div:first-child");
+            var brushButton = templateRoot.find(".brush-btn");
+
+            scope.$watch(() => scope.outerCurrentBrush, value =>
+            {
+                brushButton.toggleClass("btn-danger", value === scope.brush.brush);
+            });
+
+            brushButton.bind("click", () =>
+            {
+                scope.$apply(() => scope.onclick());
+            });
+
+            if (scope.brush.numconfig)
+            {
+                var btnPlus = $('<button class="btn btn-success top-right-button">&plus;</button>');
+                btnPlus.bind("click", () => scope.brush.brush.incr());
+
+                var btnMinus = $('<button class="btn btn-warning bottom-right-button">&minus;</button>');
+                btnMinus.bind("click", () => scope.brush.brush.decr());
+
+                templateRoot.append(btnPlus).append(btnMinus);
+            }
         }
     };
+});
+
+app.directive("sidebars", () =>
+{
+    return <ng.IDirective> {
+        restrict: 'E',
+        scope: {},
+        transclude: true,
+        templateUrl: "bars-template.html",
+        controller: ['$scope', function ($scope)
+        {
+            var bars = $scope.bars = [];
+
+            $scope.select = (bar) =>
+            {
+                this.closeAll();
+                bar.selected = true;
+            };
+
+            this.addBar = (bar) =>
+            {
+                bar.selected = false;
+                bars.push(bar);
+            };
+
+            this.closeAll = () =>
+            {
+                angular.forEach(bars, (bar) => bar.selected = false);
+            }
+        }]
+    };
+});
+
+app.directive("sidebar", () =>
+{
+    return <ng.IDirective>{
+        restrict: 'E',
+        require: '^sidebars',
+        transclude: true,
+        scope: {
+            title: '@'
+        },
+        link: function (scope : any, element, attrs, barsCtrl)
+        {
+            barsCtrl.addBar(scope);
+
+            element.find(".closebtn").bind("click", () =>
+            {
+                scope.$apply(() => barsCtrl.closeAll());
+            });
+        },
+        templateUrl: 'bar.html'
+    }
 });

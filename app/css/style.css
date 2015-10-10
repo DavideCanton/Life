@@ -1,50 +1,100 @@
 #content {
-  position: relative; }
+  position: relative;
+  margin-top: 50px; }
   #content table {
     cursor: pointer;
     margin: auto;
-    border-spacing: 0;
-    border-collapse: collapse; }
+    border-spacing: 1px;
+    border-collapse: separate; }
     #content table td {
-      border: 1px solid;
+      border: 1px solid black;
       transition: background .1s linear; }
-      #content table td.cell-1 {
-        width: 64px;
-        height: 64px; }
-      #content table td.cell-2 {
-        width: 32px;
-        height: 32px; }
-      #content table td.cell-3 {
-        width: 21.33333px;
-        height: 21.33333px; }
-      #content table td.cell-4 {
-        width: 16px;
-        height: 16px; }
-      #content table td.cell-5 {
-        width: 12.8px;
-        height: 12.8px; }
-      #content table td.cell-6 {
-        width: 10.66667px;
-        height: 10.66667px; }
+      #content table td.top-hover {
+        border-top: 5px solid red; }
+      #content table td.bottom-hover {
+        border-bottom: 5px solid red; }
+      #content table td.left-hover {
+        border-left: 5px solid red; }
+      #content table td.right-hover {
+        border-right: 5px solid red; }
 
-form {
-  margin: 5px; }
+.margin-bottom {
+  margin-bottom: 10px; }
 
-#bar {
+#btn-bar ul li {
+  list-style: none; }
+#btn-bar .brush-btn-container {
+  position: relative;
+  margin: 0 auto 10px auto; }
+#btn-bar .brush-btn-container button {
+  height: 50px;
+  z-index: 3; }
+#btn-bar .brush-btn-container button.top-right-button {
   position: absolute;
+  z-index: 4;
+  top: 0;
   right: 0;
-  height: 100%;
-  top: 0; }
-  #bar ul li {
-    list-style: none; }
-  #bar button {
+  height: 20px;
+  margin: 0;
+  line-height: 20px;
+  padding: 0;
+  width: 20px; }
+#btn-bar .brush-btn-container button.bottom-right-button {
+  position: absolute;
+  z-index: 4;
+  bottom: 0;
+  right: 0;
+  height: 20px;
+  margin: 0;
+  line-height: 20px;
+  padding: 0;
+  width: 20px; }
+#btn-bar button {
+  z-index: 1; }
+
+.my-checkbox-label {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  display: inline-block;
+  line-height: 40px; }
+
+.no-rounded-border {
+  border-radius: 0; }
+
+.color-form-control {
+  min-width: 80px !important; }
+
+.sidebar-content {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background: lightblue;
+  padding: 20px;
+  z-index: 2; }
+  .sidebar-content .closebtn {
+    margin-bottom: 20px;
+    background: #ff6666;
+    width: 30px;
+    height: 30px;
+    border: none; }
+  .sidebar-content form {
+    margin-bottom: 20px; }
+    .sidebar-content form > div {
+      margin-bottom: 10px; }
+
+.sidebar-links {
+  padding: 20px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 15%;
+  z-index: 1; }
+  .sidebar-links button {
     height: 50px;
-    margin: 0 auto 10px auto; }
-
-.no-block {
-  display: inline-block; }
-
-form[name=extraForm] input[type=checkbox] {
-  margin-right: 5px; }
+    margin-bottom: 20px; }
 
 /*# sourceMappingURL=style.css.map */
