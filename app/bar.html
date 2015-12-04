@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<div ng-show="selected" class="sidebar-content">
-  <button class="closebtn btn btn-primary">&times;</button>
+<div ng-class="{'show-bar': selected}" class="sidebar-content">
+  <div class="title-div">
+    <h3 class="label-title"><span class="label label-default">{{ title }}</span></h3>
+    <button class="closebtn btn btn-primary pull-right">&times;</button>
+  </div>
   <div ng-transclude></div>
 </div>

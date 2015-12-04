@@ -3,6 +3,9 @@
   <head lang="en">
     <meta charset="UTF-8">
     <title>Life</title>
+    <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <script src="bower_components/underscore/underscore.js"></script>
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-animate/angular-animate.min.js"></script>
@@ -10,19 +13,17 @@
     <script src="js/lifetable.js"></script>
     <script src="js/brushes.js"></script>
     <script src="js/app.js"></script>
-    <link href="bower_components/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
   </head>
-  <body ng-controller="lifeController" ng-keypress="handleKeyPress($event)">
+  <body ng-controller="LifeController" ng-keypress="handleKeyPress($event)">
     <sidebars>
-      <sidebar title="Grid controls">
+      <sidebar title="Grid generation" width="25">
         <form name="dataForm" novalidate class="form-horizontal">
           <label for="r">Rows:</label>
-          <input id="r" type="number" ng-model="r" min="1" class="form-control margin-bottom">
+          <input id="r" type="number" ng-model="table_dimensions.r" min="1" class="form-control margin-bottom">
           <label for="c">Cols:</label>
-          <input id="c" type="number" ng-model="c" min="1" class="form-control margin-bottom">
+          <input id="c" type="number" ng-model="table_dimensions.c" min="1" class="form-control margin-bottom">
           <div>
-            <button ng-disabled="isRunning" ng-class="{active: toroidal}" ng-click="toggleToroidal()" class="btn btn-primary">Toroidal</button><!-- TODO non funzionano pi� -->
+            <button ng-disabled="isRunning" ng-class="{active: toroidal}" ng-click="toggleToroidal()" class="btn btn-primary">Toroidal</button>
             <div class="btn-group">
               <button ng-click="generate()" class="btn btn-primary">Create Empty</button>
               <button ng-click="generate_random()" class="btn btn-warning">
@@ -32,27 +33,29 @@
             </div>
           </div>
         </form>
-        <form name="startForm">
+      </sidebar>
+      <sidebar title="Simulation controls" width="25">
+        <div class="title-div">
+          <h3 class="label-title"><span class="label label-info">Generation: {{ generation }}</span></h3>
+        </div>
+        <form name="startForm" class="form-inline">
           <label>Delay:
-            <input type="number" ng-model="delay" min="0" step="10" class="form-control">
-          </label>
-          <div>
-            <div class="btn-group">
-              <button ng-click="start()" ng-disabled="isRunning" class="btn btn-success">Start</button>
-              <button ng-click="stop()" ng-disabled="!isRunning" class="btn btn-danger">Stop</button>
-              <button ng-click="step()" class="btn btn-warning">Step</button>
-            </div>
+            <input type="number" ng-model="delay.delay" min="0" step="10" class="form-control">
+          </label><br><b>Controls:</b>
+          <div role="group" class="btn-group">
+            <button ng-click="start()" ng-disabled="isRunning" class="btn btn-success"><i class="glyphicon glyphicon-play"></i></button>
+            <button ng-click="stop()" ng-disabled="!isRunning" class="btn btn-danger"><i class="glyphicon glyphicon-stop"></i></button>
+            <button ng-click="step()" class="btn btn-warning"><i class="glyphicon glyphicon-step-forward"></i></button>
           </div>
-          <h3><span class="label label-info">Generation: {{ generation }}</span></h3>
         </form>
         <form name="extraForm" class="form-inline">
           <div>
-            <label for="fgcolor">fg color</label>
-            <input id="fgcolor" type="color" ng-model="fgcolor" class="form-control color-form-control">
+            <label for="fgcolor">Foreground color</label>
+            <input id="fgcolor" type="color" ng-model="colors.fgcolor" class="form-control color-form-control">
           </div>
           <div>
-            <label for="bgcolor">bg color</label>
-            <input id="bgcolor" type="color" ng-model="bgcolor" class="form-control color-form-control">
+            <label for="bgcolor">Background color</label>
+            <input id="bgcolor" type="color" ng-model="colors.bgcolor" class="form-control color-form-control">
           </div>
           <div>
             <label class="my-checkbox-label">B:</label>
@@ -68,7 +71,7 @@
           </div>
         </form>
       </sidebar>
-      <sidebar id="btn-bar" title="Brushes">
+      <sidebar id="btn-bar" title="Brushes" width="25">
         <brush-button ng-repeat="brush in brushes" data-brush="brush" data-outer-current-brush="current_brush" data-onclick="select(brush)"></brush-button>
       </sidebar>
     </sidebars>

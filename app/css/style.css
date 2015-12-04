@@ -8,7 +8,7 @@
     border-collapse: separate; }
     #content table td {
       border: 1px solid black;
-      transition: background .1s linear; }
+      transition: background 0.1s linear; }
       #content table td.top-hover {
         border-top: 5px solid red; }
       #content table td.bottom-hover {
@@ -32,23 +32,23 @@
 #btn-bar .brush-btn-container button.top-right-button {
   position: absolute;
   z-index: 4;
-  top: 0;
-  right: 0;
   height: 20px;
   margin: 0;
   line-height: 20px;
   padding: 0;
-  width: 20px; }
+  width: 20px;
+  top: 0;
+  right: 0; }
 #btn-bar .brush-btn-container button.bottom-right-button {
   position: absolute;
   z-index: 4;
-  bottom: 0;
-  right: 0;
   height: 20px;
   margin: 0;
   line-height: 20px;
   padding: 0;
-  width: 20px; }
+  width: 20px;
+  bottom: 0;
+  right: 0; }
 #btn-bar button {
   z-index: 1; }
 
@@ -65,17 +65,25 @@
 .color-form-control {
   min-width: 80px !important; }
 
+.sidebar-25 {
+  left: -25%;
+  width: 25%; }
+
+.sidebar-10 {
+  left: -10%;
+  width: 10%; }
+
 .sidebar-content {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
-  width: 30%;
-  background: lightblue;
+  background: rgba(178, 178, 190, 0.53);
   padding: 20px;
-  z-index: 2; }
+  z-index: 2;
+  transition: left ease-out 0.3s; }
+  .sidebar-content.show-bar {
+    left: 0; }
   .sidebar-content .closebtn {
-    margin-bottom: 20px;
     background: #ff6666;
     width: 30px;
     height: 30px;
@@ -87,14 +95,16 @@
 
 .sidebar-links {
   padding: 20px;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 15%;
-  z-index: 1; }
+  z-index: 1;
+  text-align: center; }
   .sidebar-links button {
     height: 50px;
-    margin-bottom: 20px; }
+    margin-left: 10px; }
+
+.label-title {
+  display: inline; }
+
+.title-div {
+  margin: 10px 0; }
 
 /*# sourceMappingURL=style.css.map */

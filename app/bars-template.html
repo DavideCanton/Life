@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <div class="sidebar-links">
-  <div ng-repeat="bar in bars">
-    <button ng-click="select(bar)" class="btn-primary btn btn-block">{{ bar.title }}</button>
-  </div>
+  <button ng-repeat="bar in bars track by $index" ng-click="toggle(bar)" ng-class="{'btn-danger': bar.selected, 'btn-primary': !bar.selected}" class="btn">{{ bar.title }}</button>
 </div>
 <div ng-transclude></div>

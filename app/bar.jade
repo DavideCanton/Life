@@ -1,4 +1,9 @@
 doctype html
-div(ng-show="selected").sidebar-content
-	button.closebtn.btn.btn-primary &times;
+div(ng-class="{'show-bar': selected}").sidebar-content
+	div.title-div
+		h3.label-title
+			span.label.label-default
+				| {{ title }}
+
+		button.closebtn.btn.btn-primary.pull-right &times;
 	div(ng-transclude)

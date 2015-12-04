@@ -1,18 +1,22 @@
 ///<reference path="../../typings/angularjs/angular.d.ts"/>
+///<reference path="../../typings/underscore/underscore.d.ts"/>
 ///<reference path="lifetable.ts"/>
 ///<reference path="brushes.ts"/>
 var app = angular.module("lifeApp", ['ngAnimate']);
-function toIntegerArray(b) {
+function filterThenMap(a, f, f2) {
     var r = [];
-    for (var i = 0; i < b.length; i++)
-        if (b[i])
-            r.push(i);
+    _.each(a, function (x, i) {
+        if (f(x, i, a))
+            r.push(f2(x, i, a));
+    });
     return r;
+}
+function toIntegerArray(b) {
+    return filterThenMap(b, angular.identity, function (a, j) { return j; });
 }
 function fromIntegerArray(n) {
     var r = [false, false, false, false, false, false, false, false];
-    for (var i = 0; i < n.length; i++)
-        r[n[i]] = true;
+    n.forEach(function (x) { return r[x] = true; });
     return r;
 }
 var LifeController = (function () {
@@ -20,16 +24,14 @@ var LifeController = (function () {
         this.$scope = $scope;
         this.$timeout = $timeout;
         $scope.timer = null;
-        $scope.delay = 1000;
-        $scope.r = 10;
-        $scope.c = 10;
+        $scope.delay = { delay: 1000 };
+        $scope.table_dimensions = { r: 10, c: 10 };
         $scope.toroidal = true;
         $scope.isRunning = false;
         $scope.generation = 0;
         $scope.brushes = Brushes.BRUSHES;
         $scope.current_brush = $scope.brushes[0].brush;
-        $scope.fgcolor = "#000000";
-        $scope.bgcolor = "#ffffff";
+        $scope.colors = { fgcolor: "#000000", bgcolor: "#ffffff" };
         $scope.$watch("timer", function (val) {
             $scope.isRunning = !!val;
         });
@@ -45,31 +47,28 @@ var LifeController = (function () {
             var b = toIntegerArray($scope.b);
             var s = toIntegerArray($scope.s);
             if ($scope.toroidal)
-                $scope.table = new LifeTable.LifeTableToroidal($scope.r, $scope.c, b, s);
+                $scope.table = new LifeTable.LifeTableToroidal($scope.table_dimensions.r, $scope.table_dimensions.c, b, s);
             else
-                $scope.table = new LifeTable.LifeTable($scope.r, $scope.c, b, s);
+                $scope.table = new LifeTable.LifeTable($scope.table_dimensions.r, $scope.table_dimensions.c, b, s);
         };
         $scope.generate_random = function () {
             $scope.generate();
-            for (var i = 0; i < $scope.r; i++)
-                for (var j = 0; j < $scope.c; j++)
+            for (var i = 0; i < $scope.table_dimensions.r; i++)
+                for (var j = 0; j < $scope.table_dimensions.c; j++)
                     if (Math.random() <= 0.5)
                         $scope.table.setElementAt(i, j, true);
         };
         $scope.range = function (a, b) {
-            var r = [];
-            for (var i = a; i < b; i++)
-                r.push(i);
-            return r;
+            return _.range(a, b);
         };
         $scope.start = function () {
             $scope.stop();
             var makeStep = function () {
                 $scope.generation++;
                 $scope.table.advance();
-                $scope.timer = $timeout(makeStep, $scope.delay);
+                $scope.timer = $timeout(makeStep, $scope.delay.delay);
             };
-            $scope.timer = $timeout(makeStep, $scope.delay);
+            $scope.timer = $timeout(makeStep, $scope.delay.delay);
         };
         $scope.applyBrush = function (i, j) {
             if ($scope.current_brush)
@@ -101,12 +100,12 @@ var LifeController = (function () {
                         $scope.start();
                     break;
                 case 43:
-                    $scope.delay += 100;
+                    $scope.delay.delay += 100;
                     break;
                 case 45:
-                    $scope.delay -= 100;
-                    if ($scope.delay < 0)
-                        $scope.delay = 0;
+                    $scope.delay.delay -= 100;
+                    if ($scope.delay.delay < 0)
+                        $scope.delay.delay = 0;
                     break;
                 case 103:
                     $scope.generate();
@@ -133,14 +132,15 @@ var LifeController = (function () {
     LifeController.$inject = ['$scope', '$timeout'];
     return LifeController;
 })();
-app.controller('lifeController', LifeController);
+app.controller('LifeController', LifeController);
 app.directive("adjustWidth", function () {
     return {
         restrict: 'A',
         link: function (scope, element) {
             scope.$watch(function () { return scope.table.getCols(); }, function (colNum) {
                 var width = $(element).closest("table").parent().width();
-                var cellSize = Math.min(width / colNum, 50) >> 0;
+                var size = width / colNum;
+                var cellSize = Math.min(size, 50) >> 0;
                 element.css({
                     width: cellSize + "px",
                     height: cellSize + "px"
@@ -163,24 +163,20 @@ app.directive("hoverBrush", function () {
                 var cur_brush = scope.current_brush;
                 var r = cur_brush.rows();
                 var c = cur_brush.cols();
-                for (var i = s_i; i < s_i + r; i++)
-                    for (var j = s_j; j < s_j + c; j++) {
-                        var row = main_table.find("tr").eq(i);
-                        if (row.length == 0)
-                            continue;
-                        var cell = row.find("td").eq(j);
-                        if (cell.length == 0)
-                            continue;
-                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
-                        if (i == s_i)
-                            cell.addClass("top-hover");
-                        if (i == s_i + r - 1)
-                            cell.addClass("bottom-hover");
-                        if (j == s_j)
-                            cell.addClass("left-hover");
-                        if (j == s_j + c - 1)
-                            cell.addClass("right-hover");
-                    }
+                main_table.find("tr").slice(s_i, s_i + r).each(function (i, row) {
+                    $(row).find("td").slice(s_j, s_j + c).each(function (j, cell) {
+                        var $cell = $(cell);
+                        $cell.removeClass("top-hover bottom-hover left-hover right-hover");
+                        if (i == 0)
+                            $cell.addClass("top-hover");
+                        if (i == r - 1)
+                            $cell.addClass("bottom-hover");
+                        if (j == 0)
+                            $cell.addClass("left-hover");
+                        if (j == c - 1)
+                            $cell.addClass("right-hover");
+                    });
+                });
             }
             function onmouseout() {
                 var s_i = last_i;
@@ -188,16 +184,11 @@ app.directive("hoverBrush", function () {
                 var cur_brush = scope.current_brush;
                 var r = cur_brush.rows();
                 var c = cur_brush.cols();
-                for (var i = s_i; i < s_i + r; i++)
-                    for (var j = s_j; j < s_j + c; j++) {
-                        var row = main_table.find("tr").eq(i);
-                        if (row.length == 0)
-                            continue;
-                        var cell = row.find("td").eq(j);
-                        if (cell.length == 0)
-                            continue;
-                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
-                    }
+                main_table.find("tr").slice(s_i, s_i + r).each(function (_, row) {
+                    $(row).find("td").slice(s_j, s_j + c).each(function (_, cell) {
+                        $(cell).removeClass("top-hover bottom-hover left-hover right-hover");
+                    });
+                });
             }
             element.bind('mouseover', onmouseover);
             element.bind('mouseout', onmouseout);
@@ -230,7 +221,7 @@ app.directive("clickableCell", function () {
                 table.on('mouseup', 'td', mouseup);
             });
             scope.$watch(function () { return scope.table.getElementAt(scope.i, scope.j); }, function (val) {
-                element.css('background-color', val ? scope.fgcolor : scope.bgcolor);
+                element.css('background-color', val ? scope.colors.fgcolor : scope.colors.bgcolor);
             });
             scope.$watch("fgcolor", function (val) {
                 if (scope.table.getElementAt(scope.i, scope.j))
@@ -254,9 +245,11 @@ app.directive("mycheckbox", function () {
             scope.$watch("content", function (value) {
                 element.find("button").text(value);
             });
+            var classes = ["success", "danger"];
             scope.$watch("model", function (value) {
-                var add = value ? "success" : "danger";
-                var rem = add === "success" ? "danger" : "success";
+                var iAdd = value ? 1 : 0;
+                var add = classes[iAdd];
+                var rem = classes[1 - iAdd];
                 element.find("button").addClass("btn-" + add).removeClass("btn-" + rem);
             });
             element.bind('click', function () {
@@ -286,9 +279,13 @@ app.directive("brushButton", function () {
             });
             if (scope.brush.numconfig) {
                 var btnPlus = $('<button class="btn btn-success top-right-button">&plus;</button>');
-                btnPlus.bind("click", function () { return scope.brush.brush.incr(); });
+                btnPlus.bind("click", function () {
+                    scope.$apply(function () { return scope.brush.brush.incr(); });
+                });
                 var btnMinus = $('<button class="btn btn-warning bottom-right-button">&minus;</button>');
-                btnMinus.bind("click", function () { return scope.brush.brush.decr(); });
+                btnMinus.bind("click", function () {
+                    scope.$apply(function () { return scope.brush.brush.decr(); });
+                });
                 templateRoot.append(btnPlus).append(btnMinus);
             }
         }
@@ -303,32 +300,53 @@ app.directive("sidebars", function () {
         controller: ['$scope', function ($scope) {
             var _this = this;
             var bars = $scope.bars = [];
-            $scope.select = function (bar) {
-                _this.closeAll();
-                bar.selected = true;
+            var current = null;
+            $scope.toggle = function (bar) {
+                if (current && current.barId === bar.barId)
+                    bar.selected = !bar.selected;
+                else {
+                    _this.closeAll();
+                    bar.selected = true;
+                    current = bar;
+                }
             };
             this.addBar = function (bar) {
                 bar.selected = false;
                 bars.push(bar);
             };
+            this.close = function (bar) {
+                current = null;
+                bar.selected = false;
+            };
             this.closeAll = function () {
+                current = null;
                 angular.forEach(bars, function (bar) { return bar.selected = false; });
             };
-        }]
+        }],
+        link: function () {
+            $("body").on("click", function (e) {
+                // console.log(e.target);
+            });
+        }
     };
 });
 app.directive("sidebar", function () {
+    var barId = 0;
     return {
         restrict: 'E',
         require: '^sidebars',
         transclude: true,
         scope: {
-            title: '@'
+            title: '@',
+            width: '='
         },
         link: function (scope, element, attrs, barsCtrl) {
+            $(element).children().eq(0).addClass("sidebar-" + scope.width);
+            scope.barId = barId;
+            barId++;
             barsCtrl.addBar(scope);
             element.find(".closebtn").bind("click", function () {
-                scope.$apply(function () { return barsCtrl.closeAll(); });
+                scope.$apply(function () { return barsCtrl.close(scope); });
             });
         },
         templateUrl: 'bar.html'

@@ -1,0 +1,121 @@
+$big-button: 50
+$small-button: $big-button * 0.4
+
+#content
+  position: relative
+  margin-top: 50px
+
+  table
+    cursor: pointer
+    margin: auto
+    border-spacing: 1px
+    border-collapse: separate
+
+    td
+      border: 1px solid black
+      transition: background .1s linear
+
+      @each $pos in top, bottom, left, right
+        &.#{$pos}-hover
+          border-#{$pos}: 5px solid red
+
+.margin-bottom
+  margin-bottom: 10px
+
+#btn-bar
+  ul
+    li
+      list-style: none
+
+  & .brush-btn-container
+    position: relative
+    margin: 0 auto 10px auto
+
+  & .brush-btn-container button
+    height: #{$big-button}px
+    z-index: 3
+
+  @mixin brush-btn-container-absolute-btn
+    position: absolute
+    z-index: 4
+    height: #{$small-button}px
+    margin: 0
+    line-height: #{$small-button}px
+    padding: 0
+    width: #{$small-button}px
+
+  & .brush-btn-container button.top-right-button
+    @include brush-btn-container-absolute-btn()
+    top: 0
+    right: 0
+
+  & .brush-btn-container button.bottom-right-button
+    @include brush-btn-container-absolute-btn()
+    bottom: 0
+    right: 0
+
+  button
+    z-index: 1
+
+.my-checkbox-label
+  width: 40px
+  height: 40px
+  text-align: center
+  display: inline-block
+  line-height: 40px
+
+.no-rounded-border
+  border-radius: 0
+
+.color-form-control
+  min-width: 80px !important
+
+@mixin sidebar-w($i)
+  left: - percentage($i / 100)
+  width: percentage($i / 100)
+
+.sidebar-25
+  @include sidebar-w(25)
+
+.sidebar-10
+  @include sidebar-w(10)
+
+.sidebar-content
+  position: absolute
+  top: 0
+  bottom: 0
+  background: rgba(178, 178, 190, 0.53)
+  padding: 20px
+  z-index: 2
+  transition: left ease-out .3s
+
+  &.show-bar
+    left: 0
+
+  .closebtn
+    background: #ff6666
+    width: 30px
+    height: 30px
+    border: none
+
+  form
+    margin-bottom: 20px
+
+    & > div
+      margin-bottom: 10px
+
+.sidebar-links
+  padding: 20px
+  z-index: 1
+  text-align: center
+
+  button
+    height: #{$big-button}px
+    margin-left: 10px
+
+
+.label-title
+  display: inline
+
+.title-div
+  margin: 10px 0

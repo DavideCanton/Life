@@ -1,4 +1,6 @@
 ///<reference path="../../typings/angularjs/angular.d.ts"/>
+///<reference path="../../typings/underscore/underscore.d.ts"/>
+
 ///<reference path="lifetable.ts"/>
 ///<reference path="brushes.ts"/>
 
@@ -8,16 +10,14 @@ interface MyScope extends ng.IScope
 {
     table : LifeTable.LifeTable;
     current_brush : Brushes.Brush;
-    r : number;
-    c : number;
+    table_dimensions : {r: number; c: number};
     b : boolean[];
     s : boolean[];
     generation : number;
     isRunning : boolean;
     toroidal : boolean;
-    delay : number;
-    fgcolor : string;
-    bgcolor : string;
+    delay : {delay: number};
+    colors :  {fgcolor: string; bgcolor: string};
     timer : ng.IPromise<any>;
     brushes : Brushes.BrushData[];
 
@@ -35,20 +35,29 @@ interface MyScope extends ng.IScope
     setHighLife() : void;
 }
 
-function toIntegerArray(b : boolean[]) : number[]
+function filterThenMap<T, U>(a : T[], f : ((e : T, i : number, a2 : T[]) => boolean),
+                             f2 : ( (x : T, i2 : number, a3 : T[]) => U)) : U[]
 {
     var r = [];
-    for (var i = 0; i < b.length; i++)
-        if (b[i])
-            r.push(i);
+    _.each(a, (x : T, i : number) =>
+    {
+        if (f(x, i, a))
+            r.push(f2(x, i, a));
+    });
     return r;
+}
+
+function toIntegerArray(b : boolean[]) : number[]
+{
+    return filterThenMap(b,
+        angular.identity,
+        (a : boolean, j : number) => j);
 }
 
 function fromIntegerArray(n : number[]) : boolean[]
 {
     var r = [false, false, false, false, false, false, false, false];
-    for (var i = 0; i < n.length; i++)
-        r[n[i]] = true;
+    n.forEach((x) => r[x] = true);
     return r;
 }
 
@@ -60,16 +69,14 @@ class LifeController
                 private $timeout : ng.ITimeoutService)
     {
         $scope.timer = null;
-        $scope.delay = 1000;
-        $scope.r = 10;
-        $scope.c = 10;
+        $scope.delay = {delay: 1000};
+        $scope.table_dimensions = {r: 10, c: 10};
         $scope.toroidal = true;
         $scope.isRunning = false;
         $scope.generation = 0;
         $scope.brushes = Brushes.BRUSHES;
         $scope.current_brush = $scope.brushes[0].brush;
-        $scope.fgcolor = "#000000";
-        $scope.bgcolor = "#ffffff";
+        $scope.colors = {fgcolor: "#000000", bgcolor: "#ffffff"};
 
         $scope.$watch("timer", val =>
         {
@@ -93,26 +100,23 @@ class LifeController
             var s = toIntegerArray($scope.s);
 
             if ($scope.toroidal)
-                $scope.table = new LifeTable.LifeTableToroidal($scope.r, $scope.c, b, s);
+                $scope.table = new LifeTable.LifeTableToroidal($scope.table_dimensions.r, $scope.table_dimensions.c, b, s);
             else
-                $scope.table = new LifeTable.LifeTable($scope.r, $scope.c, b, s);
+                $scope.table = new LifeTable.LifeTable($scope.table_dimensions.r, $scope.table_dimensions.c, b, s);
         };
 
         $scope.generate_random = () =>
         {
             $scope.generate();
-            for (var i = 0; i < $scope.r; i++)
-                for (var j = 0; j < $scope.c; j++)
+            for (var i = 0; i < $scope.table_dimensions.r; i++)
+                for (var j = 0; j < $scope.table_dimensions.c; j++)
                     if (Math.random() <= 0.5)
                         $scope.table.setElementAt(i, j, true);
         };
 
         $scope.range = (a : number, b : number) : number[] =>
         {
-            var r : number[] = [];
-            for (var i = a; i < b; i++)
-                r.push(i);
-            return r;
+            return _.range(a, b);
         };
 
         $scope.start = () =>
@@ -123,10 +127,10 @@ class LifeController
             {
                 $scope.generation++;
                 $scope.table.advance();
-                $scope.timer = $timeout(makeStep, $scope.delay);
+                $scope.timer = $timeout(makeStep, $scope.delay.delay);
             };
 
-            $scope.timer = $timeout(makeStep, $scope.delay);
+            $scope.timer = $timeout(makeStep, $scope.delay.delay);
         };
 
         $scope.applyBrush = (i : number, j : number) : void =>
@@ -170,12 +174,12 @@ class LifeController
                         $scope.start();
                     break;
                 case 43: // plus
-                    $scope.delay += 100;
+                    $scope.delay.delay += 100;
                     break;
                 case 45: // minus
-                    $scope.delay -= 100;
-                    if ($scope.delay < 0)
-                        $scope.delay = 0;
+                    $scope.delay.delay -= 100;
+                    if ($scope.delay.delay < 0)
+                        $scope.delay.delay = 0;
                     break;
                 case 103: // g
                     $scope.generate();
@@ -208,7 +212,7 @@ class LifeController
     }
 }
 
-app.controller('lifeController', LifeController);
+app.controller('LifeController', LifeController);
 
 app.directive("adjustWidth", () =>
 {
@@ -219,7 +223,8 @@ app.directive("adjustWidth", () =>
             scope.$watch(() => scope.table.getCols(), colNum =>
             {
                 var width = $(element).closest("table").parent().width();
-                var cellSize = Math.min(width / colNum, 50) >> 0;
+                var size = width / colNum;
+                var cellSize = Math.min(size, 50) >> 0;
 
                 element.css(
                     {
@@ -250,20 +255,18 @@ app.directive("hoverBrush", () =>
                 var r = cur_brush.rows();
                 var c = cur_brush.cols();
 
-                for (var i = s_i; i < s_i + r; i++)
-                    for (var j = s_j; j < s_j + c; j++)
+                main_table.find("tr").slice(s_i, s_i + r).each((i, row : Element) =>
+                {
+                    $(row).find("td").slice(s_j, s_j + c).each((j, cell : Element) =>
                     {
-                        var row = main_table.find("tr").eq(i);
-                        if (row.length == 0) continue;
-                        var cell = row.find("td").eq(j);
-                        if (cell.length == 0) continue;
-
-                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
-                        if (i == s_i) cell.addClass("top-hover");
-                        if (i == s_i + r - 1) cell.addClass("bottom-hover");
-                        if (j == s_j) cell.addClass("left-hover");
-                        if (j == s_j + c - 1) cell.addClass("right-hover");
-                    }
+                        var $cell = $(cell);
+                        $cell.removeClass("top-hover bottom-hover left-hover right-hover");
+                        if (i == 0) $cell.addClass("top-hover");
+                        if (i == r - 1) $cell.addClass("bottom-hover");
+                        if (j == 0) $cell.addClass("left-hover");
+                        if (j == c - 1) $cell.addClass("right-hover");
+                    });
+                });
             }
 
             function onmouseout()
@@ -274,16 +277,13 @@ app.directive("hoverBrush", () =>
                 var r = cur_brush.rows();
                 var c = cur_brush.cols();
 
-                for (var i = s_i; i < s_i + r; i++)
-                    for (var j = s_j; j < s_j + c; j++)
+                main_table.find("tr").slice(s_i, s_i + r).each((_, row : Element) =>
+                {
+                    $(row).find("td").slice(s_j, s_j + c).each((_, cell : Element) =>
                     {
-                        var row = main_table.find("tr").eq(i);
-                        if (row.length == 0) continue;
-                        var cell = row.find("td").eq(j);
-                        if (cell.length == 0) continue;
-
-                        cell.removeClass("top-hover bottom-hover left-hover right-hover");
-                    }
+                        $(cell).removeClass("top-hover bottom-hover left-hover right-hover");
+                    });
+                });
             }
 
 
@@ -332,7 +332,7 @@ app.directive("clickableCell", ()=>
 
             scope.$watch(() => scope.table.getElementAt(scope.i, scope.j), val =>
             {
-                element.css('background-color', val ? scope.fgcolor : scope.bgcolor);
+                element.css('background-color', val ? scope.colors.fgcolor : scope.colors.bgcolor);
             });
 
             scope.$watch("fgcolor", val =>
@@ -365,10 +365,13 @@ app.directive("mycheckbox", () =>
                 element.find("button").text(value);
             });
 
+            var classes = ["success", "danger"];
+
             scope.$watch("model", value =>
             {
-                var add : string = value ? "success" : "danger";
-                var rem : string = add === "success" ? "danger" : "success";
+                var iAdd = value ? 1 : 0;
+                var add : string = classes[iAdd];
+                var rem : string = classes[1 - iAdd];
                 element.find("button").addClass("btn-" + add).removeClass("btn-" + rem);
             });
 
@@ -409,10 +412,17 @@ app.directive("brushButton", () =>
             if (scope.brush.numconfig)
             {
                 var btnPlus = $('<button class="btn btn-success top-right-button">&plus;</button>');
-                btnPlus.bind("click", () => scope.brush.brush.incr());
+                btnPlus.bind("click", () =>
+                {
+                    scope.$apply(()=> scope.brush.brush.incr());
+                });
 
                 var btnMinus = $('<button class="btn btn-warning bottom-right-button">&minus;</button>');
-                btnMinus.bind("click", () => scope.brush.brush.decr());
+                btnMinus.bind("click", () =>
+                {
+                    scope.$apply(()=> scope.brush.brush.decr());
+                });
+
 
                 templateRoot.append(btnPlus).append(btnMinus);
             }
@@ -430,11 +440,18 @@ app.directive("sidebars", () =>
         controller: ['$scope', function ($scope)
         {
             var bars = $scope.bars = [];
+            var current = null;
 
-            $scope.select = (bar) =>
+            $scope.toggle = (bar) =>
             {
-                this.closeAll();
-                bar.selected = true;
+                if (current && current.barId === bar.barId)
+                    bar.selected = !bar.selected;
+                else
+                {
+                    this.closeAll();
+                    bar.selected = true;
+                    current = bar;
+                }
             };
 
             this.addBar = (bar) =>
@@ -443,30 +460,51 @@ app.directive("sidebars", () =>
                 bars.push(bar);
             };
 
+            this.close = (bar) =>
+            {
+                current = null;
+                bar.selected = false;
+            };
+
             this.closeAll = () =>
             {
+                current = null;
                 angular.forEach(bars, (bar) => bar.selected = false);
             }
-        }]
+        }],
+        link: () =>
+        {
+            $("body").on("click", (e : JQueryMouseEventObject) =>
+            {
+                // console.log(e.target);
+            });
+        }
     };
 });
 
 app.directive("sidebar", () =>
 {
+    var barId = 0;
+
     return <ng.IDirective>{
         restrict: 'E',
         require: '^sidebars',
         transclude: true,
         scope: {
-            title: '@'
+            title: '@',
+            width: '='
         },
-        link: function (scope : any, element, attrs, barsCtrl)
+        link: (scope : any, element, attrs, barsCtrl) =>
         {
+            $(element).children().eq(0).addClass("sidebar-" + scope.width);
+
+            scope.barId = barId;
+            barId++;
             barsCtrl.addBar(scope);
 
             element.find(".closebtn").bind("click", () =>
             {
-                scope.$apply(() => barsCtrl.closeAll());
+                scope.$apply(() => barsCtrl.close(scope));
             });
         },
         templateUrl: 'bar.html'
